@@ -18,6 +18,8 @@ urlpatterns = [
     path('signout/',views.signout ,name='signout'),
     path('no-access/',views.noaccess ,name='no-access'),
     path('add/student/<int:class_id>/', views.add_student, name='add-student'),
+    path('student/<int:student_id>/<int:classroom_id>/update/', views.student_update, name='student-update'),
+    path('student/<int:student_id>/<int:classroom_id>/delete/', views.student_delete, name='student-delete'),
 ]
 
 if settings.DEBUG:

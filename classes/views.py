@@ -121,7 +121,7 @@ def add_student(request, class_id):
 		form = StudentForm(request.POST)
 		if form.is_valid():
 			student = form.save(commit=False)
-			student.teacher = classroom
+			student.classroom = classroom
 			student.save()
 			messages.success(request, "Successfully Added a Student!")
 			return redirect('classroom-detail', classroom_id=class_id)
@@ -139,14 +139,17 @@ def student_update(request, student_id):
 		return redirect('classroom-list')
 	form = StudentForm()
 	if request.method == "POST":
-		form = StudentForm(request.POST, instance = student)
+		form = ClassroomForm(request.POST, instance = student)
 		if form.is_valid():
 			form.save()
 			messages.success(request, "Successfully Updated a Student!")
-			return redirect('classroom-detail', classroom_id=student.classroom_id)
+			return redirect('student_update.html', classroom_id=student.classroom_id)
 			context = {
-        "form":form,
-    }
+				"form":form,
+				"classroom": Classroom,
+				"student":student,
+
+				 }
 	return render(request, 'create.html', context)
 
 def student_delete(request, student_id):
