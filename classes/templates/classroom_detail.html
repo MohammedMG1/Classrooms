@@ -36,8 +36,8 @@
       <td>{{student.gender }}</td>
       <td>{{student.exam_grade}}</td>
       
-      <td><a href="" class="btn btn-info" >Update</a></td>
-      <td><a href="" class="btn btn-danger" >Delete</a></td>
+      <td><a href="{% url 'student-update' student.pk %}" class="btn btn-info" >Update</a></td>
+      <td><a href="{% url 'student-delete' student.pk %}" class="btn btn-danger" >Delete</a></td>
     </tr>    
     {% endfor %}
     <tr>

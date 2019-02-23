@@ -4,8 +4,6 @@ from django.contrib.auth import login, authenticate, logout
 from .models import Classroom,Student
 from .forms import ClassroomForm, StudentForm, SignupForm, SigninForm
 
-def noaccess(request):
-    return render(request, 'no-access.html')
 
 def classroom_list(request):
 	classroom = Classroom.objects.all()
@@ -45,9 +43,16 @@ def classroom_create(request):
 
 
 def classroom_update(request, classroom_id):
+	if request.user.is_anonymous:
+		messages.warning(request, "You have no permission")
+		return redirect('classroom-detail',classroom_id)
+
 	classroom = Classroom.objects.get(id=classroom_id)
-	if not (request.user == Classroom.teacher):
-		return redirect('no-access')
+	if not (request.user.is_staff or request.user == classroom.teacher):
+		messages.warning(request, "You have no permission")
+		return redirect('classroom-detail',classroom_id)
+    	
+	
 	form = ClassroomForm(instance=classroom)
 	if request.method == "POST":
 		form = ClassroomForm(request.POST, request.FILES or None, instance=classroom)
@@ -55,7 +60,6 @@ def classroom_update(request, classroom_id):
 			form.save()
 			messages.success(request, "Successfully Edited!")
 			return redirect('classroom-list')
-		print (form.errors)
 	context = {
 	"form": form,
 	"classroom": classroom,
@@ -134,31 +138,37 @@ def add_student(request, class_id):
 
 def student_update(request, student_id):
 	student = Student.objects.get(id=student_id)
-	if not (request.user == student.classroom.teacher):
-		messages.success(request, "Access Denied")
-		return redirect('classroom-list')
-	form = StudentForm()
+	if request.user.is_anonymous:
+		messages.warning(request, "You have no permission")
+		return redirect('classroom-detail', student.classroom.id)
+	
+	if not (request.user.is_staff or request.user == student.classroom.teacher):
+		messages.warning(request, "You have no permission")
+		return redirect('classroom-detail', student.classroom.id)
+
+	form = StudentForm(instance=student)
 	if request.method == "POST":
-		form = ClassroomForm(request.POST, instance = student)
+		form = StudentForm(request.POST, request.FILES or None, instance=student)
 		if form.is_valid():
 			form.save()
-			messages.success(request, "Successfully Updated a Student!")
-			return redirect('student_update.html', classroom_id=student.classroom_id)
-			context = {
-				"form":form,
-				"classroom": Classroom,
-				"student":student,
-
-				 }
-	return render(request, 'create.html', context)
+			messages.success(request, "Successfully Edited!")
+			return redirect('classroom-list')
+	context = {
+	"form": form,
+	"student": student,
+	}
+	return render(request, 'update_student.html', context)
 
 def student_delete(request, student_id):
+	if request.user.is_anonymous:
+		messages.warning(request, "You have no permission")
+		return redirect('classroom-detail', Student.classroom.id)
 	student = Student.objects.get(id=student_id)
-	if not (request.user == student.classroom.teacher):
-		messages.success(request, "Access Denied")
-		return redirect('classroom-list')
-	class_id = student.classroom_id
-	student.delete
-	messages.success(request, "Successfully deleted  a Student!" )
-	return redirect('classroom-detail', classroom_id=class_id)
-    
+	
+	if not (request.user.is_staff or request.user == student.classroom.teacher):
+		messages.warning(request, "You have no permission")
+		return redirect('classroom-detail', student.classroom.id)
+
+	Student.objects.get(id=student_id).delete()
+	messages.success(request, "Successfully Deleted!")
+	return redirect('classroom-list')
